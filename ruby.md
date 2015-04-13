@@ -23,6 +23,49 @@ about your Ruby installation, use `irb`'s `-r` flag and the `rbconfig` package:
 ```
 irb --simple-prompt -rrbconfig
 ```
+You can now request information about the following configuration information:
+
+| Term        | Directory Contents                                                      |
+| :-----------|:------------------------------------------------------------------------|
+| rubylibdir  | Ruby standard library                                                   |
+| bindir      | Ruby command-line tools                                                 |
+| archdir     | Architecture-specific extensions and libraries (compiled, binary files) |
+| sitedir     | Your own or third-party extensions and libraries (written in Ruby)      |
+| vendordir   | Third-party extensions and libraries (written in Ruby)                  |
+| sitelibdir  | Your own Ruby language extensions (written in Ruby)                     |
+| sitearchdir | Your own Ruby language extensions (written in C)                        |
+
+An example of such a request would be obtaining the location of the `ruby` 
+and `irb` executable files:
+```
+RbConfig::CONFIG["bindir"]
+```
+`RbConfig` is a constant that refers to the hash where Ruby keeps its config
+data. `"bindir"` is the key to access the corresponding value, the binary-file
+installation directory.
+
+Note that the `gems` directory won't be available using RbConfig, however it 
+is usually at the same level as `site_ruby` (`RbConfig::CONFIG["sitedir"]`).
+
+### Loading External Files and Extensions ###
+To examine `ruby`'s load path:
+```
+ruby -e 'puts $:'
+```
+Note that the `-e` flag indicates that you're passing inline ruby as an 
+argument.
+
+You can find relative directories when loading libraries:
+```
+load "../my_other_file.rb"
+```
+Because `load` is a method, it is executed at the point where Ruby encounters
+it - you can load different libraries based on conditionals etc. Also, `load`
+will load the file regardless of whether you've already loaded it before.
+
+`require`, on the other hand, doesn't reload files it has already loaded. 
+
+Strictly speaking, you don't `require` a file; you `require` a *feature*.
 
 
 ### Input/Output ###
