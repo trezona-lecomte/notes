@@ -193,10 +193,95 @@ Around the same time that we're moving from a web of documents to a web of apps,
 
 Finally, the Web of APIs:
 We've gotten progressively more abstract. From pages, to apps, to services and now just the interface. A lot of the notion of web APIs have their roots in Roy Fielding's 'Architectural Styles and the Design of Network-based Software Architectures'.
+ REST:
+ - Abstract model of HTTP outlined by Roy Fielding:
+     + Client-server, stateless (self-contained), & therefore cacheable, layered (reliable)
+     + Uniform interface: regardless of your domain, it's the same interface:
+        * resources that have addresses
+        * representations of those resources
+        * stateless messages (cacheable)
+        * hypermedia (using the web for business applications)
+    + Code on demand: if nothing else works, write client-executable code to fill-in the blanks
+- The combination of Web Services with Web Linking is key:
+    + HTTP is treated as a transfer protocol using hypermedia: for business apps, we're not just linking from one place to another, but we're *describing* those links.
+    + In a nutshell: A representation lets you know the things that are possible at that point, you then use links to transfer state information.
+- The notion of a Web of APIs has spawned several implementation models:
+    + MVC (adopted from UIs)
+    + CRUD (URI style - using HTTP to share objects)
+    + Hypermedia (Media types are how we transfer info)
 
+In summary, we have Pages, Apps, Services and APIs.
+ - The web of Pages
+     + Document centric
+ - The web of apps
+     + Application centric
+ - The web of services
+     + Component centric
+ - The web of APIs
+     + Interface centric
 
 
 ## API Targeting ##
+ - API Consumers
+ - Acquisition Targets
+ - Product Modeling
+
+### API Consumers ###
+Private consumers:
+usually inside your own organization. Often this means that the product of their work is private or internal. This audience is highly skilled, normally tailored to your technology. You have a lot of control over how they code (you can review & train them). Your API is inherently going to be quite well understood so you may not need to document the API as extensively as you otherwise would. If the documentation might go stale, then don't waste time on it. you can use more jargon that with external consumers. You control the code & the deployment. Your agenda with private consumers is *alignment*. Private APIs can help you strengthen your existing position & reduce costs, or create option value.
+Private APIs *Strengthen* your market position by:
+     - reducing back-office costs
+     - Increasing underlying component reuse
+     - speeding time-to-market
+
+Partner Consumers: 
+This is where you attempt to create mutual benefit by teaming up in a 'strategic partnership'. Often you'll have SLAs & agreements about QoS. You will have less influence & control over their code & deployment (including release dates). The idea of *alignment* isn't present as much here. Your product might be an SDK - because your partners might not be technically as savy, or you may want to maintain control over some intellectual property.You control when features are available. The agenda here is *co-operation*. Often there are opportunities here to extend your market reach, and in this case you want you API to look like the domain that you're expanding into.
+Partner APIs *Extend* your market position by:
+     - customize your interface for market segments
+     - Gain access to related markets
+     - show up in more locations or devices
+
+Public Consumers:
+Third parties, app developers, etc. Often no direct relationship with you. You've got no idea how they'll use it or what their skill level will be. Documentation is key here, because the API is your product. The agenda here is *wide open*. Public APIs, despite the risk, offer the chance to discover entirely new markets and build new relationships.
+Public APIs help to *discover* new markets by:
+ - test entirely new business models
+ - dicover new communities
+ - treat APIs as product research
+
+Why have an interface at all?
+
+### Acquisition: Reach ###
+The measure: do I have more installations/instances? If you want to get into a new space, or raise awareness, then you need to increase your reach. Focusing on reach allows you to leverage existing products.
+
+### Acquisition: Content ###
+You may want to increase user-contributed content, even just to have it on hand for analysis. You may want to make new content connections, you can make an API that makes it easy to share. You may also want to just gather behaviour data.
+
+### Acquisition: User ###
+You may want to expand the user base, increase user traffic, get into your users *daily workflow*. This helps to deepen customer relationships. You can try levelling up with a user - trading features for user data.
+
+### Product Modeling ###
+ - Know your product inside-out
+ - Monitoring is vital, as is deep analysis
+ - Who is using your API?
+ - Are there any potential partners out there?
+ - When are your consumers using your API? are there cycles?
+ - Measure, measure, measure
+ - What are your metrics?
+     + API Performance:
+         * Latency
+         * Uptime
+         * Reliability (consistency)
+     + Developer Performance
+         * "installs"
+         * traffic
+         * stability
+ - You can't improve what your don't measure
+ - So, once measures, *improve*!
+     + small changes can mean big results
+     + test new ideas
+     + turn feedback into features
+ - You are your own best source of big data
+
 
 ## The USE Paradigm ##
 
@@ -213,3 +298,6 @@ We've gotten progressively more abstract. From pages, to apps, to services and n
 ## Implementing API Clients ##
 
 ## Versioning Web APIs ##
+
+
+
