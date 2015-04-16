@@ -81,7 +81,20 @@ fh.close
 ```
 Note that `fh` is shorthand for file handle.
 
+## Enumerable ##
 
+### Reduce / Inject ###
+```
+reduce(initial, sym) -> obj
+reduce(sym) -> obj
+reduce(initial) { |memo, obj| block } -> obj
+reduce { |memo, obj| block } -> obj
+```
+Combines all elements of *enum* by applying a binary operation, specified by a block or a symbol that names a method or operator. 
+
+If your specify a block, then for each element in *enum* the block is passed an accumulator value (*memo*) and the element. If you specify a symbol instead, then each element in the collection will be passed to the names method of *memo*. In either case, the result becomes the new value for *memo*. At the end of the iteration, the final value of *memo* is the return value for the method.
+
+If you don't explicitly specify an *initial* value for *memo*, then the first element of the colletion is used as the initial value of *memo*.
 
 ## Conventions ##
 Ruby variable conventions:
