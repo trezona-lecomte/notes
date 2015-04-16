@@ -1,6 +1,8 @@
 # Fielding's dissertation #
 
 ## Background: Defining Software Architecture ##
+
+## Context: what's the problem? ##
 The WWW succeeded in large part due to it's architecture - it was designed to 
 scale. It was developed iteratively, using the principles of REST. "REST 
 emphasizes scalability of component interactions, generality of interfaces,
@@ -34,10 +36,11 @@ can have more impact on performance than the communication protocols used for
 that interaction."
 
 One of the key challenges of web architecture is interconnecting info systems 
-across organizational boundaries. Web architecture must be considered in the 
-context of sharing *large-grain data* objects across *high-latency* networks 
+*across organizational boundaries*. Web architecture must be considered in the 
+context of sharing *large-grain data objects* across *high-latency* networks 
 and multiple *trust boundaries*. 
 
+## Definitions: what is software architecture? ##
 ### Run-time Abstraction ###
 "A software architecture is an *abstraction of the run-time elements* of a
 software system during some phase of its operation. A system may be composed of 
@@ -273,3 +276,129 @@ This can be done through caching, reduction of the frequency of network
 interactions in relation to user actions (replicated data and disconnected
 operation) and by removing the need for some interactions by moving the 
 processing closer to the source of the data (*mobile code*).
+
+The properties of a style must be framed in relation to the appropriate 
+interaction distance:
+ - within a single process
+ - across processes on single host
+ - inside a local-area network (WAN)
+ - spread across a wide-area network (WAN)
+ - across the internet (many trust boundaries)]
+
+#### Scalability ####
+This refers to the ability of an architecture to support large numbers of 
+components, or interactions among components, within an active configuration.
+This can be improved by simplifying components, distributing services across 
+many components (decentralizing the interactions), and by controlloing
+interactions & configurations as a result of monitoring. "Styles influence 
+these factors by determining the location of application state, the extent of
+distribution, and the coupling between components."
+
+Some more factors that impact scalability:
+ - frequency of interactions
+ - distribution of load on a component (time: peaks or consistent)
+ - level of guarantee provided by component (best effort, guaranteed delivery)
+ - whether a request is synchronous or asynchronous
+ - whether the environment is controlled or anarchic (trusted components?)
+
+#### Simplicity ####
+The primary means by which an architectural style can achieve simplicity is 
+through the separation of concerns. The clean allocation of functionality across
+components leads to an architecture that is easier to reason about. 
+
+Simplicity includes:
+ - the level of complexity
+ - understandability
+ - verifiability
+
+Another contributing factor to simplicity is generality - the more general the
+elements within an architecture, the less variation.
+
+#### Modifiability ####
+The ease with which changes can be made to an application architecture, this
+encompases:
+ - evolvability
+ - extensibility
+ - customizability
+ - configurability 
+ - reusability
+
+Particular to network-based systems is dynamic modifiability, where changes are
+made to a deployed application without stopping & restarting the system.
+
+The end-goal is to be prepared for gradual and fragmented change, as any 
+network-based application will be distributed across multiple organizational
+boundaries so will encounter staggered changes between old & new implementations
+of a variety of other systems.
+
+Evolvability: how easily a component can change without negatively impacting
+other components.
+
+Extensibility: how easily functionality can be added to a system. Dynamic 
+extensiblity is how easily it can be added without impacing the rest of the 
+system. This can be increased by decoupling components (such as with event-based
+integration)
+
+Customizability: how easily the behaviour of an architectural element can be
+temporarily specialized for one client without adversely impacting other clients.
+This is induced by the remote evaluation and code-on-demand styles.
+
+Configurability: related to both extensibility and reusability, as it refers to
+post-deployment modification of components (or configurations of components),
+such that they're made capable of new services/data element types. The pipe-and-
+filter and code-on-demand styles are examples that induce configurability (of
+components and configurations, respectively).
+
+Reusability: the degree to which components, connectors or data elements can be
+reused (without modification) in other applications. The primary mechanisms for
+achieving this in architectural styles are reduction of coupling (knowledge of
+identity) between components and the constraint of generality of component
+interfaces. The uniform pipe-and-filter style exemplifies these constraints.
+
+#### Visiblity ####
+The ability of a component to monitor or mediate the interactions between two 
+other components. Architectural styles can also influence the visiblity of 
+interactions within a network-based app by restricting interfaces via generality
+or providing access to monitoring. 
+
+This can improve performance via shared caching or interactions, scalability via
+layered services, reliability via reflective monitoring, and security via 
+allowing interactions to be inspected by mediators (e.g. firewalls). The mobile
+agent style is an example where the lack of visiblity may lead to security 
+concerns.
+
+#### Portability ####
+Software is portable if it can
+
+#### Reliablity ####
+
+
+## Styles for Network-based Hypermedia systems ##
+
+### Data-flow Styles ###
+
+| Style  | Deriv.  | Net perf | UP perf | Eff. | Scal. | Simp. |Evo. | Ext. | Cust. | Conf. | Reus. | Vis. | Port. | Rel. |
+| :-----:|:-------:|:--------:|:-------:|:----:|:-----:|:-----:|:---:|:----:|:-----:|:-----:|:-----:|:----:|:-----:|:----:|
+| PF     |         |          | +-      |      |       | +     | +   | +    |       | +     | +     |      |       |      |
+| UPF    | PF      | -        | +-      |      |       | ++    | +   | +    |       | ++    | ++    | +    |       |      |
+
+#### Pipe and Filter (PF) ####
+In this style, each component (filter) reads streams of data on its inputs and
+produces streams of data on its outputs, usually while applying a transformation
+to the input streams and processing them incrementally so that output begins 
+before the input is completely consumed. This style is also referred to as a 
+one-way data flow network. The constraint here is that a filter must be 
+completely independent of other filters (zero coupling): it must not share 
+state, control thread, or identify with the other filters on its upstream and
+downstream interfaces.
+
+                  ____________________
+                 |                    |
+upstream ------> | Component (filter) | --------> downstream
+                 |  - independent     |
+                 |  - transforms data |
+                 |  - outputs as it   | 
+                 |    receives input  |
+                 |____________________|
+
+                 
