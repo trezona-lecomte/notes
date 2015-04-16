@@ -43,7 +43,13 @@ X3 = 7*4+3(mod 8) = 31(mod 8) = *7*
 
 LCGs have the advantage of being *fast*, but they're not very random & may not generate every random number. 
 
-Multiplicative Congruential Generator (MCG)
+Multiplicative Congruential Generator (MCG) ?
+
+
+### Randomizing Arrays ###
+```
+
+```
 
 # Floyd's cycle-finding algorithm
 

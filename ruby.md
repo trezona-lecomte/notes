@@ -81,6 +81,49 @@ fh.close
 ```
 Note that `fh` is shorthand for file handle.
 
+
+## Plain Old Ruby Loops ##
+
+```
+loop do
+
+end
+```
+
+```
+5.times do
+
+end
+```
+
+```
+while condition_is_true
+
+end
+```
+
+```
+until condition_is_false
+    
+end
+```
+
+```
+for iterator in iterable_object
+
+end
+
+for number in (0..5)
+    puts number
+end
+
+for item in my_array
+    puts item
+end
+```
+
+
+
 ## Enumerable ##
 
 ### Reduce / Inject ###
