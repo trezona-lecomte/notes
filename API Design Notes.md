@@ -330,10 +330,52 @@ HOW????
      + don't create 'Dodo' apps - don't make dead ends!
 
 
-
 ## The Discovery Phase for API Design ##
+Collect info from stakeholders, aiming to end up with a consolidated, condensed set of crucial information. Define shared actions & vocabulary. Iterative on 'collect' and 'define' until 'done'. Most of the time you'll be done before you're 100% sure - *close enough*.
+
+### Collect ###
+ - Figure out what to collect
+     + Identify *data* elements
+         * Get down to the lowest level of detail (productId, firstName etc)
+         * Don't leave anything assumed
+         * Even if you think you know all your objects, get them listed out!
+         * Identify mandatory/optional
+     + Identify *actions* & the data needed for each action
+         * again, get rid down to the nitty gritty
+     + Identify *critical* paths
+         * the order in which actions take place
+     + *Don't evaluate*, just collect.
+ - one-on-one with key stakeholders
+     + come armed with questions
+     + ask people to describe the process (rather than asking for data/actions/order)
+     + use the 'echo technique'
+     + share your notes with them once your done!
+ - group discussion
+     + focus on sharing the notes from the one-on-ones
+     + invite discussion & collabortion
+     + work to distill the information
+     + moderate, don't edit
+ - workshop: present back to complete the feedback loop
+
+### Define ###
+When defining data elements:
+ - focus on vocab - you're building a dictionary
+ - don't try to define objects or hierarchy
+ - create a single vocab
+ - consolidate but don't create multiple meanings per word
+ - use tagging: associations not hierarchies
+
+When defining actions:
+ - work to fully describe actions (state transitions)
+ - *don't* consolidate - actions are cheap
+ - allow for a wide set of actions
+ - link actions to categories /tags
+ - make actions as specific as possible
+
+Iterative, but know when you're done: *close enough is close enough*
 
 ## API Styles ##
+
 
 ## Implement a Solid Foundation ##
 
