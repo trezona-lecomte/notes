@@ -284,6 +284,51 @@ You may want to expand the user base, increase user traffic, get into your users
 
 
 ## The USE Paradigm ##
+Usable, Scalable, Evolvable.
+
+### Usable ###
+The ease of use and learnability of a human-made object. This is all about feedback. An API is an interface just like a tablet or a GUI. 
+
+How do we measure usability?
+ - Present use-cases and test them: how many steps? how much indirection?
+ - Know who you users are
+ - Do empirical measurement: hackathons, codejams, how often do they have to read the documentation?
+ - Do all of this as early as possible - iterate
+
+### Scalable ###
+This is the ability of a system, network or process to handle a growing amount of work in a capable manner.
+ - scaling on hardware only gives minimal gains
+ - scaling on the code gets you only so far
+ - scaling the *architecture* gives the biggest win: being able to add machines without impacting the system
+
+Scaling out is better than scaling out (for network-based systems). It's harder at first, but over time it's much more reliable.
+
+HOW????
+ - Stateless messages on the outside
+ - Queues on the inside
+==> Stop blocking! 
+ - Once you have queues as a pattern, you can start to add more machines to read from the queues! 
+ - Take advantage of DevOps: agile infrastructure, scale machines, people, processes around deployment and operations. Get rid of ceremony! Example: Etsi, lots of people can push to production - they've scaled the surface of their workforce that can release to prod.
+
+### Evolvable ###
+This is the capacity for a system to *adapt*. 
+
+Small changes over time: being able to change the interface, not the code, is what adds adaptability. 
+ - Minor, non-breaking changes
+ - New features w/o breaking === evolvability
+
+HOW????
+ - Extend (pandere or 'to stretch'): 
+     + existing elements *can't be removed* (that's breaking it)
+     + can't change the *meaning* of existing processes
+     + new elements must be *optional*
+ - Versioning (vertere or 'to turn'):
+     + don't unless you have to (it's a fork in the road, creating a dead-end)
+     + make it easy to identify the version
+     + make it hard for users to mistake the version
+     + be prepared for clients to ignore version details
+     + don't create 'Dodo' apps - don't make dead ends!
+
 
 
 ## The Discovery Phase for API Design ##
