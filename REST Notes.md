@@ -392,13 +392,211 @@ completely independent of other filters (zero coupling): it must not share
 state, control thread, or identify with the other filters on its upstream and
 downstream interfaces.
 
-                  ____________________
-                 |                    |
-upstream ------> | Component (filter) | --------> downstream
-                 |  - independent     |
-                 |  - transforms data |
-                 |  - outputs as it   | 
-                 |    receives input  |
-                 |____________________|
+Advantages:
+ - Simplicity: overall i/o of system is a simple composition of the behaviours
+   of the individual filters. 
+ - Reusability: any two filters can be hooked together, provided they are agreed
+   on the data that is being transmitted between them.
+ - Extensibility: new filters can easily be added to existing systems.
+ - Evolvability: existing filters can be replace by improved ones.
+ - Verifiability: they permit certain kinds of specialized analysis such as
+   throughput and deadlock analysis.
+ - User-Perceived Performance: they naturally support concurrent execution
 
-                 
+Disadvantages:
+ - propogation delay is added through long pipelines
+ - batch sequential processing occurs if a filter cannot incrementally process
+   its inputs
+ - no interactivity is allowed because a filter cannot know that any particular 
+   output stream shares a controller with any particular input stream.
+   
+The controller function (or invisible hand) that configures the filters prior to
+activation is considered a separate operational phase of the system, hence a 
+separate architecture, even though one cannot exist without the other.
+
+#### Unfiform Pipe and Filter (UPF) ####
+This style adds the constraint that all filters must have the *same interface*.
+A prime example of this is found in the Unix Operating System, where filter 
+processes have an interface consisting of one input data stream of characters 
+(stdin) and two output data streams of characters (stdout and stderr). 
+Restricting the interface allows independently developed filters to be arranged
+at will to form new applications. It also simplifies the task of understanding
+how a given filter works.
+
+A disadvantage to this approach is that it may reduce network performance as
+the data needs to be converted to and from it's natural format.
+
+
+### Replication Styles ###
+
+| Style  | Deriv.  | Net perf | UP perf | Eff. | Scal. | Simp. |Evo. | Ext. | Cust. | Conf. | Reus. | Vis. | Port. | Rel. |
+| :-----:|:-------:|:--------:|:-------:|:----:|:-----:|:-----:|:---:|:----:|:-----:|:-----:|:-----:|:----:|:-----:|:----:|
+| RR     |         |          | ++      |      | +     |       |     |      |       |       |       |      |       | +    |
+| $      | RR      |          | +       | +    | +     | +     |     |      |       |       |       |      |       |      |
+
+### Replicated Repository (RR) ###
+This style improves the accessibilit of data and scalability of services by 
+having more than one process provide the same service. These decentralized
+servers interact to provide clients the illusion that there is only one service.
+Distributed systems such as XMS and remote versioning systems such as CVS are
+primary examples.
+
+The main advantage is user-perceived performance, both in terms of latency and
+in terms of the enablement of disconnected operation in the event of primary
+server failure or intentional off-network roaming. Simplicity is neutral, since
+the complexity of replication is offset by the savings of allowing network-
+unaware components to operate transparently on locally replicated data.
+Maintaining consistency is the main difficulty.
+
+### Cache ($) ###
+The Cache style is a derivative of the RR style. This is where the result of an
+individual request is replicated such that it may be reused by later requests.
+This style is most often found where the potential data set far exceeds the 
+capacity of any one client, as in the WWW, or where complete access to the
+repository isn't necessary. *Lazy replication* is where data is replicated upon
+a not-yet-cached response for a request, relying on locality of reference and
+commonality of interest to propogate useful items into the cache for later
+reuse. Active replication is where cacheable entries are pre-fetched based on
+the anticipated requests. 
+
+Caching provides slightly less improvement that the RR style in terms of user-
+perceived performance, since more requests will miss the cache and only the 
+recently accessed data will be available for disconnected operation. On the 
+other hand, caching is much easier to implement, doesn't request as much 
+processing and storage, and is more efficient. The Cache style becomes network-
+based when it is used in conjunction with a client-stateless-server style.
+
+
+## Hierarchical Styles ##
+
+| Style  | Deriv.   | Net perf | UP perf | Eff. | Scal. | Simp. |Evo. | Ext. | Cust. | Conf. | Reus. | Vis. | Port. | Rel. |
+| :-----:|:--------:|:--------:|:-------:|:----:|:-----:|:-----:|:---:|:----:|:-----:|:-----:|:-----:|:----:|:-----:|:----:|
+| CS     |          |          |         |      | +     | +     | +   |      |       |       |       |      |       |      |
+| LS     |          |          | -       |      | +     |       | +   |      |       |       | +     |      | +     |      |
+| LCS    | CS+LS    |          | -       |      | ++    | +     | ++  |      |       |       | +     |      | +     |      |
+| CSS    | CS       | -        |         |      | ++    | +     | +   |      |       |       |       | +    |       | +    |
+| C$SS   | CSS+$    | -        | +       | +    | ++    | +     | +   |      |       |       |       | +    |       | +    |
+| LC$SS  | LCS+C$SS | -        | +-      | +    | +++   | ++    | ++  |      |       |       | +     | +    | +     | +    |
+| RS     | CS       |          |         | +    |       | +     | +   |      |       |       |       | -    |       |      |
+| RDA    | CS       |          |         | +    |       |       |     |      |       |       |       | +    |       | -    |
+
+### Client-Server (CS) ###
+This is the most frequently encountered architectural style for network-based
+applications. 
+
+A server component, offering a set of services, listens for requests upon those
+services. A Client component, desiring that service to be performed, sends a
+request to the server via a connector. The server either rejects or performs the
+request and sends a response back to the client. 
+
+The main principle behind this style is the separation of concerns. This leads
+to increased simplicitly, scalability and evolvability.
+
+This base form of client-server does not constrain how application state is
+partitioned between client and server components. It is often referred to by
+the mechanisms used for connector implementation, such as RPC or message-
+oriented middleware.
+
+### Layered System (LS) and Layered-Client-Server (LCS) ###
+A layered system is organized hierarchically, with each layer providing services
+to the layer above and consuming services from the layer below. 
+
+Layered system reduce coupling between layers by hiding layers from all but the
+layer immediately above them (that consumes them). This improves evolvability
+and reusability. 
+
+Examples include layered communication protocals such as TCP/IP and OSI protocol
+stacks, and hardware interface libraries. 
+
+The main disadvantage of layered systems is the additional overhead and latency,
+reducing user-perceived performance.
+
+Layered-Client-Server adds proxy and gateway components to the Client-Server
+style. A proxy is a shared server for one or more components, forwarding 
+requests (with possible translation) to servers. A gateway components appears
+as a normal server to client & proxies, but it actually forwards requests to
+'inner-layer' servers. 
+
+These addition mediator components can be added in multiple layers to add
+features like load balancing and security checking.
+
+Architectures based on layered-client-server are referred to as two-tiered, 
+three-tiered or multi-tiered architectures.
+
+LCS is also a solution to managing identity in large scale distributed systems,
+where complete knowledge of all servers would be prohibitively expensive. 
+
+### Client-Stateless-Server (CSS) ###
+A derivative of the CS style, but with the additional constraint that no 
+*session state* is allowed on the server component. Each request from client to
+server must contain all the information necessary to understand the request,
+and cannot take advantage of any stored context on the server. 
+
+This constraint improves the following properties:
+ - Visibility: monitoring systems don't have to look beyond single requests
+ - Realiability: the task of recovering from partial failures is easier
+ - Scalability: the server can quickly free resources following a request as it
+                doesn't have to maintain any state for further requests in the
+                same session
+
+The disadvantage is that network performance may be decreased by the repetitive
+data (per-interaction overhead) sent in a series of requests.
+
+### Client-Cache-Stateless-Server (C$SS) ###
+This is the client-stateless-server with cache component(s) added. The cache
+acts as a mediator between client and server, so cacheable requests can be 
+reused. An example of this is Sun Microsystems NFS.
+
+The advantage of an added cache component with client-server style architectures
+is the complete or partial elimination of some interactions, improving efficieny
+and user-perceived performance.
+
+### Layerered-Client-Cache-Stateless-Server (LC$SS) ###
+This style derives from both the layered-client-server and 
+client-cache-stateless-server styles, through the addition of proxy and/or 
+gateway components to the latter. An example of this is the Internet domain 
+name system (DNS).
+
+The advantages/disadvantages are simply a combination of those for LCS and C$SS,
+however note that we don't count the contributions of the CS style twice since
+the benefits aren't additive when they come from the same ancestral derivation.
+
+### Remote Session (RS) ###
+This style is a variant of client-server that attempts to minimize complexity
+or maximize reuse of child components rather than the server component.
+
+Each client initiates a session on the server then invokes a series of services.
+Application state is kept entirely on the server. Examples include TELNET & FTP.
+
+The advantages are:
+ - its easier to centrally maintain the interface of the server
+ - efficiency is increased if the interactions make extended use of the session
+   context on the server
+   
+The disadvantages are:
+ - reduced scalability of the server, due to stored state
+ - reduced visibility of interactions, since monitoring components would have to
+   know the state on the server
+   
+### Remote Data Access (RDA) ###
+A variant of clinet-server that spreads state between the client and the server.
+
+Clients send database queries in a standard format such as SQL to remote 
+servers. The server allocates a workspace & performs the query. The client then
+may make further operations on the resulting set, or retrieve the result on
+piece at a time. The client is, clearly, required to know about the data 
+structure of the service. 
+
+The advantage of this style is that large datasets can be reduced while on the
+server (reducing network traffic, efficiency). Visibility is also improved by
+using a standard query language. 
+
+The disadvantages are that the client needs to understand the same database
+manipulation concepts as the server (reducing simplicity) and storing the 
+application context on the server reduces scalability. Reliability also suffers,
+as partial failure can leave the workspace in an unkown state. Transaction
+mechanisms like two-phase commit can be used to fix this problem, though at a
+cost of added complexity and interaction overhead.
+
+
+## Mobile Code Styles ##
