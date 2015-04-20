@@ -600,3 +600,318 @@ cost of added complexity and interaction overhead.
 
 
 ## Mobile Code Styles ##
+These styles tackle the challenge of distance using mobility - they dynamically
+change the distance between processing and data source/data destination. The 
+concept of location is introduced at an architectural level, making it possible 
+to model the cost of interactions between components. In all of the mobile code
+styles, a *data element is dynamically transformed into a component*.
+
+| Style    | Deriv.    | Net perf | UP perf | Eff. | Scal. | Simp. |Evo. | Ext. | Cust. | Conf. | Reus. | Vis. | Port. | Rel. |
+| :-------:|:---------:|:--------:|:-------:|:----:|:-----:|:-----:|:---:|:----:|:-----:|:-----:|:-----:|:----:|:-----:|:----:|
+| VM       |           |          |         |      |       | +-    |     | +    |       |       |       | -    | +     |      |
+| REV      | CS+VM     |          |         | +    | -     | +-    |     | +    | +     |       |       | -    | +     | -    |
+| COD      | CS+VM     |          | +       | +    | +     | +-    |     | +    |       | +     |       | -    |       |      |
+| LCODC$SS | LC$SS+COD | -        | ++      | ++   | +4+   | ++-+  | ++  | +    |       | +     | +     | +-   | +     | +    |
+| MA       | REV+COD   |          | +       | ++   |       | +-    |     | ++   | +     | +     |       | -    | +     |      |
+
+
+### Virtual Machine (VM) ###
+The notion of a Virtual Machine, or interpreter, style unerpins all of the 
+mobile code styles. It isn't inherently a network-based style, but is commonly
+used as such in conjunction with a component in the client-server style.
+
+The primary benefits are portability (separation of instruction & implementation
+) and extensibility. Visibility and Simplicity are generally reduced.
+
+### Remote Evaluation (REV) ###
+This is derived from the client-server and virtual machine styles. A client
+component has the knowledge necessary to perform a service, but lacks the 
+resources required. These resources are located at a remote site, so the client
+sends the knowledge to a server at the remote site which executes the code 
+using the resources available there. The results are sent back to the client.
+This style assumes that the code will be executed in an isolated environment,
+so it won't impact other clients aside from the resource usage.
+
+Advantages include extensibility & customizability (due to the ability to 
+customize the server's services) and better efficiency as the code can adapt
+its actions to the environment in the server. Simplicity is reduced, because
+the evaluation environment must be managed. Scalability is reduced, but the
+most significant sacrifice is then lack of visibility due to the client sending
+code instead of standardized queries. 
+
+### Code on Demand (COD) ###
+In this style, a client component has access to resources, but not the 
+knowledge of how to process them. It sends a request to a remote server for the
+code representing that knowledge, then executes it locally.
+
+Advantages include extendsibility and configurability (as you can add features
+to the deployed client) and better user-perceived performance and efficieny
+as the code can adapt its actions to the client's environment and interact with
+the user locally rather than through remote interactions. Scalability of the 
+server is also improved since it can off-load work to the client.
+
+Simplicity is reduced due to managing the evaluation environment. Like remote
+evaluation, the most significant limitation is the lack of visibility due to
+the server sending code instead of simple data.
+
+### Layered-Code-on-Demand-Client-Cache-Stateless-Server (LCODC$SS) ###
+This syle is an example of complementary architectural styles. It involves the
+addition of code on demand to the layered-client-cache-stateless-server style.
+Here, the code is treated as just another data element, so it doesn't interfere
+with the advantages of the LC$SS style. An example is HotJava Web browser which
+allows applets and protocol extensions to be downloaded as typed media. The
+pros and cons are simply the sum of those for COD and LC$SS.
+
+### Mobile Agent (MA) ###
+In this style, entire computational units are moved to a remote site along with
+their state, the code they need and possibly some data required to perform their
+task. This is a derivation of the REV and COD styles since the mobility goes
+both ways. 
+
+The biggest advantage here (beyond those of REV and COD) is the greater
+dynamism in the selection of when to move the code. An app can be in the midst
+of processing information at one location when it decides to move to another
+location (presumably to reduce the distance between it and the next set of data
+it wishes to process). Also, the reliability problem of partial failure is
+reduced because the app state is only in one location at a time.
+
+## Peer to Peer styles ##
+
+| Style| Deriv.  | Net perf | UP perf | Eff. | Scal. | Simp. |Evo. | Ext. | Cust. | Conf. | Reus. | Vis. | Port. | Rel. |
+| :---:|:-------:|:--------:|:-------:|:----:|:-----:|:-----:|:---:|:----:|:-----:|:-----:|:-----:|:----:|:-----:|:----:|
+| EBI  |         |          |         | +    | --    | +-    | +   | +    |       | +     | +     | -    |       | -    |
+| C2   | EBI+LCS |          | -       | +    |       | +     | ++  | +    |       | +     | ++    | +-   | +     | +-   |
+| DO   | CS+CS   | -        |         | +    |       |       | +   | +    |       | +     | +     | -    |       | -    |
+| BDO  | DO+LCS  | -        | -       |      |       |       | ++  | +    |       | +     | ++    | -    | +     |      |
+
+
+### Event-based Integartion (EBI) ###
+This is also known as implicit invovation or event system style. EBI reduces
+coupling between components by removing the need for identity on the connector
+interface. Instead of invoking another component directly, a component can
+broadcast one or more events. Other components then register intererst in that
+type of event and are invoked by the system when an event is announced. Examples
+include the MVC paradigm in Smalltalk-80.
+
+Advantages:
+ - extensibility: easy to add new components that listen for events
+ - reusability: encourages a general event interface & integration mechanism
+ - evolvability: allows replacement of components w/o affecting other interfaces
+ - efficiency: can remove need for polling
+ 
+ Disadvantages:
+ - scalability: event storms as events trigger more events
+ - reliability: single point of failure in the event bus, partial failure risk
+ - simplicity: its hard to anticipate what will happen in response to an action
+
+### C2 ###
+This style is directed at supporting large-grain reuse and flexible composition
+of components by enforcing *substrate independence*. This is done by combining
+event-based integration with layered-client-server. Asynchronous notification
+messages going down & asynchronous request messages going up are the sole means
+of intercomponent communication. This enforces loose coupling with higher layers
+(service requests may be ignored) and zero coupling with lower layers (no 
+knowledge of notification usage).
+
+Notifications are announcements of state change within a component. Connectors
+are responsible for routing and broadcasting message, as well as message
+filtering. Layered filtering of messages solves EBIs scalability problems, while
+improving evolvability and reusability. Heavyweight connectors that include
+monitoring can improve visibility and reduce reliability problems.
+
+### Distributed Objects (DO) ###
+This style views a system as a set of peer components. An object is 
+ - an entity that encapsulates some private state information or data
+ - a set of associated operations or procedures that manipulate the data
+ - possibly a thread of control
+such that these parts can be considered a single unit. Generally an object's
+state is completely hidden and protected from all other objects. The only  way
+it can be accessed is by a request/invocation on one of it's publicly accessible
+operations. 
+
+An operation may invoke operations on the same object or another object. A chain
+of related invocations is referred to as an *action*. State is distributed 
+among the objects, which is advantageous in terms of keeping state in the 
+location where it is most likely to be up-to-date, but is a disadvantage in that
+its difficult to obtain an overall system activity view (poor visibility).
+
+In order for one object to interact with another, it must know the identity of
+that other object. When an identity changes all of the invoking objects must
+also be changed. The must also be a controller object that is responsible for
+maintaining the system state. 
+
+Issues encountered when using DO can be:
+ - object management
+ - object interaction management
+ - resource management
+ 
+Due to the isolation of data, data streaming is not generally supported. This is
+better for object mobility than the mobile agent style, however.
+
+### Brokered Distributed Objects (BDO) ###
+To reduce the impact of identity, modern DO systems use more intermediary styles
+to facilitate communication, including event-based integration and brokered
+client-server. The BDO style introduces name resolver components who answer
+client requests for general service names. This improves reusability and
+evolvability but reduces efficiency and user-perceived performance.
+
+An example of this style is CORBA. These systems fare poorly when compared to
+most other network-based architectural styles. They're best for apps that 
+involve the remote invocation of encapsulated services (such as hardware 
+devices) where the efficiency & frequency of network interactions is not so
+paramount.
+
+## Designing the Web Architecture: Problems and Insights ##
+
+### WWW Application Domain Requirements ###
+The "Web's major goal was to be a shared information space through which people
+and machines could communicate."
+
+So we need:
+ - universally consistent interface to structured information
+ - availability of wide range of platforms
+ - incrementally deployable as new people/organizations join
+
+### Low Entry-Barrier ###
+Hypermedia was chosen as the user interface because of its simplicity and
+generality:
+ - the same interface can be used regardless of the information source
+ - the flexibility of hypermedia relationship (links) allows for unlimited
+    structuring
+ - the direct manipulation of links allows the complex relationship within the
+    information to guide the reader through an application
+
+
+Since information within large databases is often much easier to access via a 
+search interface rather than browsing, the Web also incorporated the ability to
+perform simple queries by providing user-entered data to a service and rendering
+the result as hypermedia.
+
+Goals:
+ - Reliability: partail availability of the overall system must not prevent the
+   authoring of content. 
+ - hypertext language needs to be simple & capable of being created using common
+   tools
+ - must be able to create references to information before that information
+   exists
+ - simplicity: all protocols were defined as text so that communication could be
+   viewed and interatively tested using existing network tools
+
+### Distributed Hypermedia ###
+This is defined by *the presence of application control information embedded
+within, or as a layer before, the presentation of information*. Distributed
+Hypermedia allows the presentation and control information to be stored at 
+remote locations. By it's nature, user actions within a distributed hypermedia
+system require the transfer of large amounts of data from where the data is
+stored to where it is used. Thus, the Web architecture must be designed for 
+large-grain data transfer. 
+
+The usability of hypermedia is highly sensitive to user-perceived latency: the
+time between selecting a link and the rendering of a usable result. Since the
+Web's information sources are distributed across the global Internet, the 
+architecture needs to minimize network transactions (round-trips within the 
+data transfer protocols).
+
+### Internet Scale ###
+Scale for the WWW is more than just geographical dispersion - it's about 
+interconnecting networks across multiple organizational boundaries. 
+
+#### Anarchic Scalability ####
+Many software systems are underpinned by the assumption that there is a single
+controlling entity or that at least all entities are acting towards a common
+goal. This assumption is folly on the Internet. Anarchic scalability refers to
+the need for architectural elements to *continue operation* when they are 
+subjected to *unanticipated load* or *malformed/malicious data*.
+
+The requirement of anarchic scalability *applies to all architectural elements*.
+Clients can't maintain knowledge of all servers, and servers can't maintain 
+knowledge of state across requests. 
+
+Hypermedia data elements can't retain 'back-pointers' (an id for each data
+element that references them), since the number of refs to a resource is
+proportional to the number of people interested in that info. 
+
+Security is also a significant concern. Multiple organizational boundaries 
+implies multiple trust boundaries. Intermediary applications, such as firewalls,
+should be able to inspect interactions to enforce security constraints. 
+Assumptions should be able to be made about authentication & authorization,
+however since authentication degrades scalability, the architectures default
+operation should be limited to actions that don't need trusted data: a safe set
+of operations with well-defined schematics.
+
+#### Independent Deployment ####
+Multiple organizational boundaries also means:
+ - gradual & fragmented change
+ - co-existence of old & new implementations
+ - encapsulation of older implementations
+ - identification of old vs. new implementations
+ - easy deployment of elements in partial, iterative fashion
+
+### Problem ###
+
+#### Architectural Style of the early WWW ####
+Basis 1. The design rationale behind the WWW architecture can be described by an 
+architectural style consisting of a set of constraints applied to the elements
+within the Web architecture.
+
+Basis 2. Constraints can be added to the WWW architectural style to derive a
+new hybrid style that better reflects the desired properties of a modern Web
+architecture.
+
+Basis 3. Proposals to modify the Web architecture can be compared to the 
+updated WWW architectural style & analysed for conflicts prior to deployment.
+
+## Representational State Transfer (REST) ##
+REST is a hybrid style derived from several other network-based architectural
+styles, combined with the additional constraints that define a uniform connector
+interface. 
+
+REST was designed with the 'Null style' as a starting point: a system in which
+there are no distinguished boundaries between components.
+
+![alt text](https://www.ics.uci.edu/~fielding/pubs/dissertation/null_style.gif "Null Style")
+
+#### Client-Server ####
+The first constraints added are those of the client-server style, namely it's
+core principle of the separation of concerns. We improve the portability of the
+UI across multiple platforms by separating the UI concerns from the data storage
+concerns. This also simplifies the server components, improving scalability.
+Perhaps the most significant advantage for the WWWs purpose is that this 
+separation allows the components to evolve independently, thus allowing for 
+multiple organizational domains.
+
+![alt text](https://www.ics.uci.edu/~fielding/pubs/dissertation/client_server_style.gif "CS Style")
+
+#### Stateless ####
+Next we add a constraint to the client-server communication: it must be 
+stateless. This means that each request from the client must contain all the 
+info necessary for the server to understand it, and can't take advantage of any
+*stored context* on the server. Session state is kept entirely on the client.
+
+![alt text](https://www.ics.uci.edu/~fielding/pubs/dissertation/stateless_cs.gif "Stateless")
+
+This induces the properties of:
+ - visibility: monitoring systems can determine full nature of a request from 
+               inspecting just that request
+ - reliability: partial failures are easier to recover from
+ - scalability: servers can quickly free-up resources
+ - simplicity: servers don't have to manage resource usage across requests
+
+The trade-off is that it induces the disadvantages of:
+ - network performance: increase of repetitive data (per-interaction overhead)
+
+### Cache ####
+In order to improve network efficiency, we add cache constraints. This requires
+that data within a response to a request must be implicitly or explicitly 
+labelled as cacheable or non-cacheable. Cacheable responses are allowed to be
+reused by clients for later, equivalent requests.
+
+![alt text](https://www.ics.uci.edu/~fielding/pubs/dissertation/ccss_style.gif "Cache")
+
+The advantage is the potential for partially or completely eliminating some
+interactions, improving:
+ - efficiency
+ - scalability
+ - user-perceieved performance
+The trade-off is that a cache can decrease reliability if stale data differs
+significantly from the current data. 
