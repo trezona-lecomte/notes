@@ -900,7 +900,7 @@ This induces the properties of:
 The trade-off is that it induces the disadvantages of:
  - network performance: increase of repetitive data (per-interaction overhead)
 
-### Cache ####
+#### Cache ####
 In order to improve network efficiency, we add cache constraints. This requires
 that data within a response to a request must be implicitly or explicitly 
 labelled as cacheable or non-cacheable. Cacheable responses are allowed to be
@@ -912,6 +912,515 @@ The advantage is the potential for partially or completely eliminating some
 interactions, improving:
  - efficiency
  - scalability
- - user-perceieved performance
+ - user-perceieved performance (reduction of average latency for series of 
+                                interactions)
 The trade-off is that a cache can decrease reliability if stale data differs
 significantly from the current data. 
+
+The design rationale of the Web architecture prior to 1994 focused on stateless
+client-server interaction for the exchange of static documents over the Internet.
+There was rudimentary support for non-shared caches, but there was no constraint
+on the interface to provide a consistent set of semantics for all resources to
+be cached. 
+
+![alt text](https://www.ics.uci.edu/~fielding/pubs/dissertation/early_web_arch.gif "Early Web Arch.")
+
+The following styles were then added to the Web's architectural style in order
+to guide the extensions that form the modern Web.
+
+#### Uniform Interface ####
+The core of REST, at least opposed to other network-based styles, is its
+emphasis on a *uniform interface* between components. This provides the
+following benefits:
+ - simplicity
+ - visibility
+ - evolvability (implementations are decoupled from the services they provide)
+
+The trade-off is that efficiency is degraded, since information is transferred
+in a standardized form rather than one that is native to each application's
+needs. The REST interface is designed to be efficient for *large-grain 
+hypermedia* data transfer.
+
+![alt text](https://www.ics.uci.edu/~fielding/pubs/dissertation/uniform_ccss.gif "Uniform Interface")
+
+But how do we actually obtain a uniform interface? It is through a combination
+of architectural constraints on the interface:
+ - *identification* of resources
+ - manipulation of resources *through representations*
+ - *self-descriptive* messages
+ - *HATEOAS* - hypermedia as the engine of application state
+
+#### Layered System ####
+Next, the layered system style is added to contrain the Web architecture to be
+composed of hierarchical layers, because each component cannot 'see' beyond the
+immediate layer with which they are interacting. By restricting this line-of-
+sight, a bound is placed on overall system complexity and substrate independence
+is promoted. Legacy services can be encapsulated and intermediaries can be used
+to improve system scalability by enabling load balancing.
+
+![alt text](https://www.ics.uci.edu/~fielding/pubs/dissertation/layered_uccss.gif "Layered System")
+
+The trade-off is that layers add overhead and latency to the processing of data,
+reducing user-perceived performance. This can be offset by shared caching at
+intermediaries. 
+
+--
+The combination of a uniform interface and a layered system induces properties
+similar to those of the uniform pipe-and-filter style. Although REST interaction
+is two-way, the large-grain data flows of hypermedia interaction can be 
+processed like a data-flow network, with filter components selectively applied
+to the data stream in order to transform the content as it passes. 
+--
+What enables intermediary components to actively transform the content of 
+messages? It's the fact that the messages are *self-descriptive* and their
+semantics are *visible* to the intermediaries.
+
+#### Code-On-Demand ####
+The final addition to our constraint set for REST is code-on-demand. REST allows
+client functionality to be extended by downloading & executing code in the form
+of applets or scripts. The induces:
+ - simplicity (reduces the number of features that have to be pre-implemented)
+ - extensibility
+
+The trade-off is that visibility is reduced, and so this constraint is actually
+an *optional* one within REST.
+
+![alt text](https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_style.gif "Code-On-Demand")
+
+#### Style Summary ####
+
+![alt text](https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_derivation.gif "Code-On-Demand")
+
+## REST Architectural Elements ##
+
+### Data Elements ###
+Unlike the Distributed Object style, where all data is encapsulated within
+and hidden by the processing components, the nature and state of an
+architecture's data elements is a key aspect of REST. The reason for this lies
+in the nature of *distributed hypermedia*. When a link is selected, information 
+needs to be moved from the location where it is stored to the location where it
+will be used by, in most cases, a human reader. This is unlike many other 
+distributed processing paradigms, where it is possible, and usually more 
+efficient, to move the "processing agent" (e.g., mobile code, stored procedure,
+search expression, etc.) to the data rather than move the data to the 
+processor.
+
+Thus, there are only 3 fundamental options:
+    1. render the data where it is located and send a fixed-format image
+    2. encapsulate the data with a rendering engine and send both
+    3. send the raw data to the recipient along with its metadata, so the 
+       recipient can choose their own rendering engine
+
+These all have their pros and cons:
+
+1. (traditional client-server):
+ - client implementation is easier as no knowledge of the data is needed
+ - functionality on the client is severely restricted
+ - processing load is almost entirely on the server, reducing scalability
+
+ 2. (mobile object):
+ - provides information hiding (as with #1)
+ - enables specialized processing of the data via the unique rendering engine
+ - again restricts the functionality of the recipient to what is built into
+   its engine
+ - may vastly increase the amount of data transferred
+
+ 3. (sending raw data w/ metadata):
+ - server remains scalable
+ - loses the advantage of information hiding
+ - requires that both the server and client understand the same data types
+
+REST actually uses a *hybrid* of all 3 options, by focusing on a shared 
+understanding of data types with metadata, but limiting the scope of what is
+revealed to a standardized interface. In REST, components comminicate by 
+transferring a *representation* of a resource in a format matching *one of an
+evolving set* of standard data types, *selected dynamically* based on the 
+capabilities or desires of the client and the nature of the resource. Whether
+the representation is in the same format as the raw source, or is derived from
+the source, remains hidden behind the interface. The benefits of the mobile
+object style are approximated by sending a *representation that consists of
+instructions* in the standard data format of an encapsulated rendering engine
+(e.g., Java). REST thus gains the separation of concerns of a client-server
+style without the scalability problems on the server side, it allows information
+hiding through a generic interface to enable encapsulation and evolution of
+services, and it provides for a diverse set of functionality through 
+downloadable feature-engines.
+
+The REST data elements can be summarized as:
+
+| Data Element            | Modern Web Examples                               |
+| :-----------------------|:--------------------------------------------------|
+| resource                | the intended conceptual target of a hypertext ref |
+| resource identifier     | URL, URN                                          |
+| representation          | HTML Document, JPEG image                         |
+| representation metadata | media type, last-modified time                    |
+| resource metadata       | source link, alternates, vary                     |
+| control data            | if-modified-since, cache-control                  |
+
+#### Resources ####
+The key abstraction of information in REST is a *resource*. Any information that
+*can be named* can be a resource. This could be a document, image, temporal
+service (e.g., "reviews written today"), a collection of other resources, a
+non-virtual object (e.g., a person) and so on. In simple terms, any concept
+that might be the *target of an author's hypertext reference* must fit within
+the definition of a resource. 
+
+The only aspect of a resource that must be *static* is the *semantics of the 
+mapping*, since semantics is what identifies the resource. For example, the 
+"author's preferred version" of an academic paper is a mapping whose value
+changes over time, whereas a mapping to "the paper published in the proceedings
+of conference X" is static. These are two distinct resources, even if they
+happen to map to the same value at some point in time.
+
+This abstraction enables some key features of the Web:
+ - generality by encompassing many sources of information without artificially
+   distinguishing them by type or implementation
+ - late binding to the reference of a representation, enabling conneg based on
+   characteristics of the request
+ - an author can reference the concept rather than some singular representation
+   of that concept, removing the need to change all existing links whenever
+   the representation changes
+
+#### Resource Identifiers ####
+REST uses resource identifiers to identify particular resources in interactions
+between components. REST connectors provide a generic interface for accessing
+and manipulating the value set of a resource. The naming authority that 
+assigned the resource identifier is responsible for maintaining the semantic
+validity of the mapping over time.
+
+Traditional closed/local hypertext systems relied on unique node or document
+identifiers that changed every time the information changed, thus requiring
+link servers to maintain references separately from the content. Since 
+centralized link servers are anathema to the immense scale and multi-
+organizational domain requirements of the Web, REST relies instead on the 
+author choosing a resource identifier that best fits the nature of the concept
+being identified. The downside of this is that the quality of an identifier
+is often dependent on the amount of money spent maintaining its validity.
+
+#### Representations ####
+Representations are used by components to capture the current or intended state
+of resources. This representation is then transferred between components as 
+part of actions. A representation is a sequence of bytes, plus representation
+metadata to describe those bytes. Other common but less precise names for a
+representation include document, file, HTTP message, instance or variant.
+
+A representation consists of:
+ - data
+ - metadata (name:value pairs, names correspond to standards defining the 
+             structure & semantics of the values)
+ - (sometimes) metadata to describe the metadata
+
+The metadata can be resource metadata or representation metadata.
+
+Control data defines the purpose of a message between components, such as the
+action being requested or the meaning of a response. It is also used to 
+parameterize requests and override the default behaviour of some connecting
+elements (such as caches). The control data helps define whether the 
+representation may indicate the current state, desired state, or value of some
+other resource.
+
+The data format of a representation is known as a media type. The design of the
+media type can impact the user-perceived performance of a distributed hypermedia
+system. They key is to place the most important rendering information up front,
+such that the initial information can be incrementally rendered while the rest
+of the info is received.
+
+### Connectors ###
+Connectors provide an abstract interface for component communication, 
+enhancing simplicity (through separation of concerns) and hiding the underlying
+implementation of resources and communication mechanisms. 
+
+| Connector | Modern Web Examples                |
+| :---------|:-----------------------------------|
+| client    | libwww, libwww-perl                |
+| server    | libwww, Apache API, NSAPI          |
+| cache     | browser cache, Akami cache network |
+| resolver  | bind (DNS lookup library)          |
+| tunnel    | SOCKS, SSL after HTTP CONNECT      |
+
+All REST interactions are stateless. This restriction accomplishes 4 functions:
+ - removes the need for any connectors to retain application state (scalability)
+ - allows interactions to be processed in parallel without knowing semantics
+ - allows intermediaries to view & understand requests in isolation
+ - forces all information that might affect reusability of cached requests to
+   be present in each request
+
+The connector interface is similar to procedural invocation, but with important
+differences in the passing of parameters & results. The in-parameters consist
+of request control data, a resource identifier indicating the target of the 
+request, and an optional representation. The out-parameters consist of response
+control data, optional resource metadata and an optional representation.
+
+From an abstract viewpoint the invocation is synchronous, however both the 
+in-parameters and the out-parameters can be passed as data streams, so 
+processing can be invoked before the value of the parameters is completely
+known (thus avoiding latency for large transfers).
+
+Server and Client are the primary connector types. The difference is that a 
+client initiates communication with a request, and the server listens for 
+connections and responds to requests. A component *may include both client and
+server connectors*.
+
+The third connector type, Cache, can be located on the interface to a client
+or a server connector. The client uses it to avoid repetition of network comms,
+and the server to avoid repeating the process of generating a response. Caches
+are typically implemented within the address space of the connector that uses
+them.
+
+Some cache connectors are shared, so that cached responses may be used in
+answer to a client other than the one for which the response was originally
+cached. Shared caching can thus reduce the impact of 'flash crowds' on popular
+servers. This can lead to errors if the cached response does not match what
+would have been obtained by a new request. 
+
+A cache is able to determine the cacheability of a response because the 
+interface is generic rather than resource-specific. By default, responses to
+retrieval requests are cacheable and all others are non-cacheable. If the 
+request requires authentication then the response is only cacheable by a non
+shared cache. Control data can be used to override these defaults. 
+
+A resolver translates partial or complete resource identifiers into the network
+address info needed to establish an inter-component connection. For example, 
+most URI include a DNS hostname as the means for identifying the naming 
+authority for a resource. A Web browser will extract the hostname from the URI
+and make use of a DNS resolver to obtain the IP address for that authority.
+Use of one or more intermediate resolvers can improve the longevity of resource
+references through indirection, with the trade-off of added latency.
+
+Finally, a tunnel is a simple relay of comms across a connection boundary, such
+as a firewall or lower-level network gateway. The only reason it's modeled as
+part of REST and not abstracted away is that some REST components may
+dynamically switch from active component behaviour to that of a tunnel. The 
+primary example is an HTTP proxy that switches to a tunnel in response to a 
+CONNECT method request, thus allowing its client to directly communicate with
+a remote server using a different protocol such as TLS that doesn't allow 
+proxies. The tunnel then disappears when both ends terminate their connection.
+
+### Components ###
+
+| Component     | Modern Web Examples                  |
+| :-------------|:-------------------------------------|
+| origin server | Apache httpd, Microsoft IIS          |
+| gateway       | Squid, CGI, Reverse Proxy            |
+| proxy         | CERN Proxy, Netscape Proxy, Gauntlet |
+| user agent    | Netscape Navigator, Lynx, MOMspider  |
+
+A user agent uses a client connector to initiate a request and becomes the 
+ultimate recipient of the response. The most common example is a Web browser.
+
+An origin server uses a server connector to govern the namespace for a 
+requested resource. It is the definitive source for representations of its
+resources and must be the ultimate recipient of nany request that intends to
+modify the value of its resources. Origin servers provide a generic interface
+to their services as a resource hierarchy, with the resource implementation
+details hidden behind the interface.
+
+Proxies act as intermediaries selected by clients to provide interface
+encapsulation of other services, data translation, performance enhancement or
+security protection. Gateways (a.k.a reverse proxies) act as intermediaries
+imposed by the network or origin server to provide interface encapsulation of
+other services, for data translatino, performance enhancement or security
+enforcement. 
+
+## REST Architectural Views ##
+
+### Process View ###
+This follows the path of data as it flows through the system. Example (of 
+three parellel requests):
+
+![alt text](https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_process_view.gif "Process View")
+
+REST's client-server separation of concerns simplifies component implementation
+, reduces the complexity of connector semantics, improves the effectiveness of 
+performance tuning, and increases the scalability of pure server components. 
+
+Layered system constraints allow intermediaries--proxies, gateways, and 
+firewalls--to be introduced at various points in the communication without 
+changing the interfaces between components, thus allowing them to assist in 
+communication translation or improve performance via large-scale, shared 
+caching. 
+
+REST enables intermediate processing by constraining messages to be 
+self-descriptive: interaction is stateless between requests, standard methods 
+and media types are used to indicate semantics and exchange information, and 
+responses explicitly indicate cacheability.
+
+ - components are connected dynamically
+ - similar to pipe-and-filter style
+ - bidirectional streams, but each direction is independent (so can use stream
+   transducers (filters))
+ - generic connector interface allows components to be placed on the stream
+   based on the properties of each request/response
+ - stateless nature of REST allows interactions to be independent, *removing the
+   need for an awareness of the overall component topology (impossible!)
+ - also allowing components to act as either destinations or intermediaries,
+   determined dynamically on a per-request basis
+ - connectors only need be aware of each other's existence
+ 
+### Connector View ###
+This concentrates on the mechanics of comms between components. For REST, we're
+particularly interesetd in the constraints that define the generic resource
+interface.
+
+Client connectors examine the resource identifier in order to select an 
+appropriate comms mechanism for each request. For example, a client may be
+configured to connect to a specific proxy component, perhaps acting as an 
+annotation filter, when the identifier indicates that it is a local resource.
+
+REST doesn't restrict comms to a particular protocol, but it does constrain the
+interface between components & hence the scope of interaction & implementation
+assumptions that might otherwise be made between components. 
+
+For example, the Web's primary transfer protocol is HTTP, but the architecture 
+also includes seamless access to resources that originate on pre-existing 
+network servers, including FTP, Gopher, and WAIS. Interaction with those 
+services is restricted to the semantics of a REST connector. This constraint 
+sacrifices some of the advantages of other architectures, such as the stateful 
+interaction of a relevance feedback protocol like WAIS, in order to retain the 
+advantages of a single, generic interface for connector semantics. In return, 
+the generic interface makes it possible to access a multitude of services 
+through a single proxy. If an application needs the additional capabilities of 
+another architecture, it can implement and invoke those capabilities as a 
+separate system running in parallel, similar to how the Web architecture 
+interfaces with "telnet" and "mailto" resources.
+
+### Data View ###
+This reveals the *application state* as information flows through the 
+components. Since REST is specifically targeted at distributed information 
+systems, it views an application as a cohesive structure of information and 
+control alternatives through which a user can perform a desired task.
+
+Component interactions occur in the form of dynamically sized messages. Small 
+or medium-grain messages are used for control semantics, but the bulk of 
+application work is accomplished via large-grain messages containing a 
+complete resource representation. The most frequent form of request semantics 
+is that of retrieving a representation of a resource (e.g., the "GET" method 
+in HTTP), which can often be cached for later reuse.
+
+REST concentrates all of the control state into the representations received 
+in response to interactions. The goal is to improve server scalability by 
+eliminating any need for the server to maintain an awareness of the client 
+state beyond the current request. An application's state is therefore defined 
+by its pending requests, the topology of connected components (some of which 
+may be filtering buffered data), the active requests on those connectors, the 
+data flow of representations in response to those requests, and the processing 
+of those representations as they are received by the user agent.
+
+An application reaches a steady-state whenever it has no outstanding requests; 
+i.e., it has no pending requests and all of the responses to its current set 
+of requests have been completely received or received to the point where they 
+can be treated as a representation data stream.
+
+The user-perceived performance of a browser application is determined by the 
+latency between steady-states: the period of time between the selection of a 
+hypermedia link on one web page and the point when usable information has been 
+rendered for the next web page.
+
+Since REST-based architectures communicate primarily through the transfer of 
+representations of resources, latency can be impacted by both the design of 
+the communication protocols and the design of the representation data formats. 
+The ability to *incrementally render the response data* as it is received is 
+determined by the design of the *media type* and the availability of *layout 
+information* (visual dimensions of in-line objects) within each representation.
+
+An interesting observation is that the most efficient network request is one 
+that doesn't use the network. In other words, the ability to reuse a cached 
+response results in a considerable improvement in application performance. 
+Although *use of a cache adds some latency to each individual request* due to 
+lookup overhead, the *average request latency is significantly reduced* when 
+even a small percentage of requests result in usable cache hits.
+
+The next control state of an application resides in the representation of the 
+*first requested resource*, so obtaining that first representation is a 
+priority. REST interaction is therefore improved by protocols that "respond 
+first and think later." In other words, a protocol that requires multiple 
+interactions per user action, in order to do things like negotiate feature 
+capabilities prior to sending a content response, will be perceptively slower 
+than a protocol that sends whatever is most likely to be optimal first and then
+provides a *list of alternatives* for the client to retrieve if the first 
+response is unsatisfactory.
+
+The *application state* is controlled and stored by the *user agent* and can be 
+composed of representations from multiple servers. In addition to freeing the 
+server from the scalability problems of storing state, this allows the user to 
+*directly manipulate the state* (e.g., a Web browser's history), *anticipate 
+changes to that state* (e.g., link maps and prefetching of representations), 
+and *jump from one application to another* (e.g., bookmarks and URI-entry 
+dialogs).
+
+The model application is therefore an engine that moves from one state to the 
+next by examining and *choosing from among the alternative state transitions* 
+in the current set of representations. Not surprisingly, this exactly matches 
+the user interface of a hypermedia browser. However, the style does not assume 
+that all applications are browsers. In fact, the application details are hidden
+from the server by the *generic connector interface*, and thus a user agent 
+could equally be an automated robot performing information retrieval for an 
+indexing service, a personal agent looking for data that matches certain 
+criteria, or a maintenance spider busy patrolling the information for broken 
+references or modified content.
+
+REST component interactions are structured in a layered client-server style, 
+but the added constraints of the *generic resource interface* create the 
+opportunity for *substitutability* and *inspection by intermediaries*.
+
+Requests and responses have the appearance of a *remote invocation style*, but 
+REST messages are targeted at a *conceptual resource* rather than an 
+implementation identifier.
+ 
+The interaction method of sending representations of resources to consuming 
+components has some parallels with event-based integration (EBI) styles. The 
+key difference is that EBI styles are *push-based*. In the REST style, 
+consuming components usually pull representations. Although this is less 
+efficient when viewed as a single client wishing to monitor a single resource, 
+the scale of the Web makes an unregulated push model infeasible.
+
+The principled use of the REST style in the Web, with its clear notion of 
+components, connectors, and representations, relates closely to the C2 
+architectural style. The C2 style supports the development of distributed, 
+dynamic applications by focusing on *structured use of connectors* to obtain 
+*substrate independence*. C2 applications rely on asynchronous notification of 
+state changes and request messages. As with other event-based schemes, C2 is 
+nominally *push-based*, though a C2 architecture could operate in REST's pull 
+style by *only emitting a notification* upon receipt of a request. However, the 
+C2 style *lacks the intermediary-friendly constraints* of REST, such as the 
+generic resource interface, guaranteed stateless interactions, and intrinsic 
+support for caching.
+
+REST provides a set of architectural constraints that, when applied as a whole,
+emphasizes scalability of component interactions, generality of interfaces, 
+independent deployment of components, and intermediary components to reduce 
+interaction latency, enforce security, and encapsulate legacy systems.
+
+
+## Experience & Evolution ##
+The name "Representational State Transfer" is intended to evoke an image of how
+a well-designed Web application behaves: a network of web pages (a virtual 
+state-machine), where the user progresses through the application by selecting
+links (state transitions), resulting in the next page (representing the next 
+state of the application) being transferred to the user and rendered for their
+use.
+
+### REST Applied to URI ###
+Uniform Resource Identifiers (URI) are both the simplest element of the Web 
+architecture and the most important. 
+
+URI = URL + URN
+
+The early Web architecture defined URI as *document* identifiers. This was
+unsatisfactory because it implied that the author is identifying the content
+rather than a representation of it, therefore implying that URI should change
+with the content, and because not all addresses correspond to documents. 
+
+REST defines a resource to be the semantics of what the author intends to
+identify, rather than the value corresponding to those semantics at the time
+the reference is created. It is then left to the author to ensure that the
+identifier does indeed identify the intended semantics.
+
+So, how does a user access, manipulate, or transfer a concept such that they 
+can get something useful when a hypertext link is selected? REST answers that 
+question by defining the things that are manipulated to be representations of 
+the identified resource, rather than the resource itself. An origin server 
+maintains a mapping from resource identifiers to the set of representations 
+corresponding to each resource. A resource is therefore manipulated by 
+transferring representations through the generic interface defined by the 
+resource identifier.
