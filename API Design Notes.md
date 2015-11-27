@@ -373,19 +373,3 @@ When defining actions:
  - make actions as specific as possible
 
 Iterative, but know when you're done: *close enough is close enough*
-
-## API Styles ##
-
-
-## Implement a Solid Foundation ##
-
-## Implementing API Servers ##
-
-## Documenting APIs ##
-
-## Implementing API Clients ##
-
-## Versioning Web APIs ##
-
-
-

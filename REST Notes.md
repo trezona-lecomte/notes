@@ -1,8 +1,14 @@
-# Fielding's dissertation #
+# Notes on Fielding's dissertation
 
-## Background: Defining Software Architecture ##
+Everything here is either my interpretation/distillation of, or an
+excerpt from, Roy Fielding's *Architectural Styles and the Design of
+Network-based Software Architectures.* Doctoral dissertation,
+University of California, Irvine, 2000. Please see the
+[full work](https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm).
 
-## Context: what's the problem? ##
+## Background: Defining Software Architecture
+
+## Context: what's the problem?
 The WWW succeeded in large part due to it's architecture - it was designed to 
 scale. It was developed iteratively, using the principles of REST. "REST 
 emphasizes scalability of component interactions, generality of interfaces,
